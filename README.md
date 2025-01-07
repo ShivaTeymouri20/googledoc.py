@@ -1,38 +1,40 @@
-import requests
-import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+def search_user_by_national_code(sheet, national_code):
+
+    rows = sheet.get_all_values()
 
 
-def get_weather():
-
-    api_key = "MNGWB3X2GMD8TA4CAC63PTFKPj"
-    base_url = "http://api.openweathermap.org/data/2.5/weather"
-
-    city_name = input("نام شهر را وارد کنید: ")
+    for row in rows:
+        if row[0] == national_code:
+            return row
 
 
-    complete_url = f"{base_url}?q={city_name}&appid={api_key}&units=metric&lang=fa"
+    return None
 
 
-    response = requests.get(complete_url)
+def main():
 
-    if response.status_code == 200:
-        data = response.json()
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
 
-
-        city = data["name"]
-        temp = data["main"]["temp"]
-        feels_like = data["main"]["feels_like"]
-        weather = data["weather"][0]["description"]
+    sheet = client.open("نام Sheet شما").sheet1
 
 
-        print(f"شهر: {city}")
-        print(f"دما: {temp}°C")
-        print(f"احساس واقعی: {feels_like}°C")
-        print(f"وضعیت هوا: {weather}")
+    national_code = input("لطفاً کد ملی را وارد کنید: ")
+
+
+    user_info = search_user_by_national_code(sheet, national_code)
+
+
+    if user_info:
+        print("مشخصات کاربر:")
+        print(user_info)
     else:
-        print("شهر پیدا نشد یا خطایی رخ داده است.")
+        print("کاربری با این کد ملی یافت نشد.")
 
 
-
-get_weather()
-
+if __name__ == "__main__":
+    main()
